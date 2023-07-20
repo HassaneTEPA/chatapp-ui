@@ -1,6 +1,6 @@
 # Chatting App UI - Svelte
 
-This repository contains the user interface (UI) for a simple Chatting App built with Svelte. The UI complements the previously mentioned Node.js/Express/Socket.IO API to provide a seamless chatting experience for users.
+This repository contains the user interface (UI) for a simple Chatting App built with Svelte. The UI complements my Simple Chat API https://github.com/HassaneTEPA/chatapp-api Node.js/Express/Socket.IO API to provide a seamless chatting experience for users.
 
 ## Getting Started
 
