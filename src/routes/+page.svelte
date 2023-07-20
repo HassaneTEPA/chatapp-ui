@@ -4,17 +4,29 @@
     let socket: any;
     let messages: Array<object> = []
     const API_URL: string = 'http://localhost:3000'
+    let user_id: string | undefined = undefined
+    let users_connected: number = 0
+
     onMount(() => {
         if (chat) {
             chat.scroll({ top: chat.scrollHeight })
         }
         socket = io(API_URL);
 
+        socket.on('user_has_logged_in', (nb_users: number) => {
+            users_connected = nb_users
+        })
+
         socket.on('chat message', (msg: string) => {
             messages.push({
-                body: msg
+                body: msg,
+                isMine: false
             })
             messages = messages
+        })
+
+        socket.on('init user', (guest_id: string) => {
+            user_id = guest_id
         })
     })
 
@@ -26,7 +38,9 @@
     function handleKeyDown(e: any) {
         if (e.keyCode === 13 && !e.shiftKey) {
             e.preventDefault()
-            socket.emit('chat message', e.target.value)
+            socket.emit('chat message', [e.target.value, user_id])
+            messages.push({body: e.target.value, isMine: true})
+            messages = messages
             e.target.value = ''
             chat.scroll({ top: chat.scrollHeight })
         }
@@ -36,18 +50,20 @@
 <div class="main-wrapper">
     <div class="container">
         <h1 class="title-xl">My ChatRoom</h1>
-        <p class="subtitle">3 personnes connecté(e)s</p>
+        <p class="subtitle">{users_connected} personnes connecté(e)s</p>
         <div bind:this={chat} class="chat-wrapper">
             {#each messages as message}
-            <p class="right">
+            <p class={message.isMine ? "right" : "left"}>
                 {message.body}
             </p>
             {/each}
         </div>
+        {#if user_id !== undefined}
         <div class="input-wrapper">
             <textarea on:input={autoResize} on:keydown={handleKeyDown} placeholder="Votre message" rows="1" cols="0" maxlength="500"></textarea>
             <img src="send.svg" alt="">
         </div>
+        {/if}
     </div>
 </div>
 
@@ -129,6 +145,10 @@
 
     .right {
         margin-left: auto;
+    }
+
+    .left {
+        margin-right: auto;
     }
 
     .input-wrapper {
