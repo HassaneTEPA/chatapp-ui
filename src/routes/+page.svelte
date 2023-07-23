@@ -6,6 +6,9 @@
     const API_URL: string = 'http://localhost:3000'
     let user_id: string | undefined = undefined
     let users_connected: number = 0
+    let username_input = ''
+
+    let username = ''
 
     onMount(() => {
         if (chat) {
@@ -17,12 +20,14 @@
             users_connected = nb_users
         })
 
-        socket.on('chat message', (msg: string) => {
+        socket.on('chat message', (data: any) => {
             messages.push({
-                body: msg,
-                isMine: false
+                body: data[0],
+                isMine: false,
+                username: data[1]
             })
             messages = messages
+            console.log(data)
         })
 
         socket.on('init user', (guest_id: string) => {
@@ -43,7 +48,14 @@
             messages = messages
             e.target.value = ''
             chat.scroll({ top: chat.scrollHeight })
+            console.log(user_id)
         }
+    }
+
+    function handleSubmit(e: any) {
+        e.preventDefault()
+        socket.emit('change_username', username_input)
+        username = username_input
     }
 </script>
 
@@ -54,17 +66,30 @@
         <div bind:this={chat} class="chat-wrapper">
             {#each messages as message}
             <p class={message.isMine ? "right" : "left"}>
+                <span class="username">{message.isMine ? username : message.username}</span> <br/>
                 {message.body}
             </p>
             {/each}
         </div>
         {#if user_id !== undefined}
+        <p class="connected-as">Connected as <b>{username}</b></p>
         <div class="input-wrapper">
             <textarea on:input={autoResize} on:keydown={handleKeyDown} placeholder="Votre message" rows="1" cols="0" maxlength="500"></textarea>
             <img src="send.svg" alt="">
         </div>
         {/if}
     </div>
+    <div class="modal-wrapper" class:d-none={username !== ''}>
+        <div class="body">
+            <p class="title-xl">Username</p>
+            <p class="subtitle">Please, enter your username</p>
+            <form on:submit={handleSubmit}>
+                <input bind:value={username_input} class="mb-md" placeholder="Username" type="text">
+                <button type="submit" disabled={username_input === ''} class="btn">Confirm</button>
+            </form>
+        </div>
+    </div>
+    <div class="backdrop" class:d-none={username !== ''}></div>
 </div>
 
 <style>
@@ -84,6 +109,7 @@
         --font-size-xl: 3rem;
         --font-size-md: 1.25rem;
         --font-size-sm: 1rem;
+        --border-radius: 0.625rem;
     }
 
     :global(*) {
@@ -93,11 +119,67 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        border-radius: 0.625rem;
     }
 
     :global(body) {
         background: var(--bg-gray);
+    }
+
+    .d-none {
+        display: none;
+    }
+
+    .btn {
+        border-radius: var(--border-radius);
+        font-size: var(--font-size-sm);
+        border: 0;
+        padding: .5rem 1rem;
+        color: var(--white);
+        background: var(--dark);
+        cursor: pointer;
+    }
+
+    .btn:disabled {
+        opacity: var(--opacity-fading);
+        cursor: default;
+    }
+
+    .mb-md {
+        margin-bottom: 1rem;
+    }
+
+    .modal-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        width: 100%;
+    }
+
+    .modal-wrapper .body {
+        background: var(--bg-gray);
+        max-width: 900px;
+        margin: auto;
+        padding: 5rem;
+        border-radius: var(--border-radius);
+    }
+
+    .modal-wrapper .body .desc {
+        font-size: var(--font-size-md);
+        opacity: var(--opacity-fading);
+        margin-bottom: 2rem;
+    }
+
+    .backdrop {
+        background-color: var(--dark);
+        opacity: var(--opacity-fading);
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        height: 100vh;
+        width: 100vw;
     }
 
     .container {
@@ -121,6 +203,13 @@
         font-weight: 500;
         letter-spacing: -0.025rem;
         opacity: var(--opacity-fading);
+        margin-bottom: 2rem;
+    }
+
+    .connected-as {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        opacity: var(--opacity-fading);
     }
 
     .chat-wrapper {
@@ -141,6 +230,11 @@
         font-weight: 400;
         letter-spacing: -0.02rem;
         font-size: var(--font-size-sm);
+        border-radius: var(--border-radius);
+    }
+    
+    .chat-wrapper .username {
+        opacity:var(--opacity-fading);
     }
 
     .right {
@@ -152,14 +246,13 @@
     }
 
     .input-wrapper {
-        margin-top: 2rem;
         display: flex;
     }
 
     .input-wrapper textarea {
         resize: none;
         background-color: var(--white);
-        border-radius: 0.625rem;
+        border-radius: var(--border-radius);
         padding: 1.02rem 1.81rem;
         font-size: var(--font-size-sm);
         letter-spacing: -0.02rem;
@@ -168,6 +261,21 @@
         gap: 1.29rem;
         outline: none;
         border: 0;
+    }
+
+    input {
+        font-size: var(--font-size-sm);
+        background-color: var(--white);
+        padding: 1.02rem 1.81rem;
+        border-radius: var(--border-radius);
+        letter-spacing: -0.02rem;
+        outline: none;
+        border: 0;
+        width: 100%;
+    }
+
+    input::placeholder {
+        opacity: var(--opacity-fading);
     }
 
     .input-wrapper textarea::placeholder {
