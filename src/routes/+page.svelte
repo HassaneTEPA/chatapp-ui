@@ -27,7 +27,6 @@
                 username: data[1]
             })
             messages = messages
-            console.log(data)
         })
 
         socket.on('init user', (guest_id: string) => {
@@ -47,8 +46,9 @@
             messages.push({body: e.target.value, isMine: true})
             messages = messages
             e.target.value = ''
-            chat.scroll({ top: chat.scrollHeight })
-            console.log(user_id)
+            setTimeout(() => {
+                chat.scrollTo(0, chat.scrollHeight)
+            }, 50)
         }
     }
 
@@ -62,7 +62,7 @@
 <div class="main-wrapper">
     <div class="container">
         <h1 class="title-xl">My ChatRoom</h1>
-        <p class="subtitle">{users_connected} personnes connecté(e)s</p>
+        <p class="subtitle mb-lg">{users_connected} personnes connecté(e)s</p>
         <div bind:this={chat} class="chat-wrapper">
             {#each messages as message}
             <p class={message.isMine ? "right" : "left"}>
@@ -148,6 +148,10 @@
         margin-bottom: 1rem;
     }
 
+    .md-lg {
+        margin-bottom: 5.06rem;
+    }
+
     .modal-wrapper {
         position: absolute;
         top: 50%;
@@ -213,10 +217,9 @@
     }
 
     .chat-wrapper {
-        margin-top: 5.06rem;
         display: flex;
         flex-direction: column;
-        max-height: 50vh;
+        max-height: 400px;
         overflow-y: scroll;
         padding-right: 1rem;
     }
